@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package invoice.v1;
+
+option go_package = "github.com/accounting-microservices/proto/invoice/v1;invoicev1";
+
+// InvoiceService manages transactional invoicing, line calculation, and billing records.
+service InvoiceService {
+  // CreateInvoice coordinates customer check, inventory reservation, and invoice creation.
+  rpc CreateInvoice(CreateInvoiceRequest) returns (CreateInvoiceResponse);
+
+  // GetInvoice retrieves an invoice with its line items by transaction ID.
+  rpc GetInvoice(GetInvoiceRequest) returns (Invoice);
+
+  // ListInvoices retrieves invoices matching temporal filters.
+  rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesResponse);
+
+  // StreamInvoices streams invoice records for high-throughput data processing.
+  rpc StreamInvoices(ListInvoicesRequest) returns (stream Invoice);
+}
+
+message InvoiceLine {
+  int64 id = 1;
+  string invoice_id = 2;
+  int64 product_id = 3;
+  string product_name = 4;
+  double unit_price = 5;
+  int32 quantity = 6;
+  double amount = 7;
+}
+
+message InvoiceLineInput {
+  int64 product_id = 1;
+  int32 quantity = 2;
+}
+
+message Invoice {
+  int64 id = 1;
+  string tenant_id = 2;
+  string transaction_id = 3;
+  string customer_id = 4;
+  string customer_name = 5;
+  string date_time = 6;
+  double total = 7;
+  double total_discount = 8;
+  double packaging = 9;
+  double freight = 10;
+  double taxable_amount = 11;
+  double tax_collected_at_source = 12;
+  double round_off = 13;
+  double grand_total = 14;
+  string method_of_payment = 15;
+  repeated InvoiceLine lines = 16;
+  string created_at = 17;
+}
+
+message CreateInvoiceRequest {
+  string tenant_id = 1;
+  string customer_id = 2;
+  string date_time = 3;
+  double total_discount = 4;
+  double packaging = 5;
+  double freight = 6;
+  double tax_collected_at_source = 7;
+  double round_off = 8;
+  string method_of_payment = 9;
+  repeated InvoiceLineInput lines = 10;
+}
+
+message CreateInvoiceResponse {
+  Invoice invoice = 1;
+  string message = 2;
+}
+
+message GetInvoiceRequest {
+  string tenant_id = 1;
+  string transaction_id = 2;
+}
+
+message ListInvoicesRequest {
+  string tenant_id = 1;
+  string action = 2; // today, thisMonth, thisWeek, thisQuarter, thisYear, toAndFromDate, all
+  string start_date = 3;
+  string end_date = 4;
+  int32 page = 5;
+  int32 limit = 6;
+}
+
+message ListInvoicesResponse {
+  repeated Invoice invoices = 1;
+  int64 total_count = 2;
+}

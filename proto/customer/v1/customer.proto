@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package customer.v1;
+
+option go_package = "github.com/accounting-microservices/proto/customer/v1;customerv1";
+
+// CustomerService manages tenant customer directories and validations.
+service CustomerService {
+  // CreateCustomer registers a customer under the authenticated tenant.
+  rpc CreateCustomer(CreateCustomerRequest) returns (CreateCustomerResponse);
+
+  // GetCustomer retrieves a single customer by their business customer ID.
+  rpc GetCustomer(GetCustomerRequest) returns (Customer);
+
+  // ListCustomers retrieves all customers belonging to the tenant.
+  rpc ListCustomers(ListCustomersRequest) returns (ListCustomersResponse);
+
+  // VerifyCustomer checks if a customer exists and is active for billing.
+  rpc VerifyCustomer(VerifyCustomerRequest) returns (VerifyCustomerResponse);
+}
+
+message Customer {
+  int64 id = 1;
+  string tenant_id = 2;
+  string cust_id = 3;
+  string name = 4;
+  string address = 5;
+  string phone_number = 6;
+  string email = 7;
+  string gstin = 8;
+  string dealer_type = 9;
+  string pan_card = 10;
+  string aadhaar = 11;
+  string created_at = 12;
+}
+
+message CreateCustomerRequest {
+  string tenant_id = 1;
+  string name = 2;
+  string address = 3;
+  string phone_number = 4;
+  string email = 5;
+  string gstin = 6;
+  string dealer_type = 7;
+  string pan_card = 8;
+  string aadhaar = 9;
+}
+
+message CreateCustomerResponse {
+  Customer customer = 1;
+  string message = 2;
+}
+
+message GetCustomerRequest {
+  string tenant_id = 1;
+  string cust_id = 2;
+}
+
+message ListCustomersRequest {
+  string tenant_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message ListCustomersResponse {
+  repeated Customer customers = 1;
+  int64 total_count = 2;
+}
+
+message VerifyCustomerRequest {
+  string tenant_id = 1;
+  string cust_id = 2;
+}
+
+message VerifyCustomerResponse {
+  bool exists = 1;
+  Customer customer = 2;
+}

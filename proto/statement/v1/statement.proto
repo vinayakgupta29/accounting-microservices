@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package statement.v1;
+
+option go_package = "github.com/accounting-microservices/proto/statement/v1;statementv1";
+
+// StatementService provides ledger aggregations, audit trails, and financial analytics.
+service StatementService {
+  // GenerateStatement aggregates invoices and customer details for defined periods.
+  rpc GenerateStatement(GenerateStatementRequest) returns (StatementResponse);
+
+  // StreamStatement streams statement ledger entries to minimize memory footprint.
+  rpc StreamStatement(GenerateStatementRequest) returns (stream StatementEntry);
+
+  // GetAnalytics computes sales and item distribution metrics over time.
+  rpc GetAnalytics(AnalyticsRequest) returns (AnalyticsResponse);
+}
+
+message GenerateStatementRequest {
+  string tenant_id = 1;
+  string action = 2; // today, thisMonth, thisWeek, thisQuarter, thisYear, toAndFromDate, all
+  string start_date = 3;
+  string end_date = 4;
+}
+
+message StatementEntry {
+  string transaction_id = 1;
+  string date_time = 2;
+  string customer_id = 3;
+  string customer_name = 4;
+  string customer_gstin = 5;
+  double taxable_amount = 6;
+  double grand_total = 7;
+  string method_of_payment = 8;
+  int32 line_items_count = 9;
+}
+
+message StatementSummary {
+  string tenant_id = 1;
+  string period_start = 2;
+  string period_end = 3;
+  int64 total_invoices = 4;
+  double total_revenue = 5;
+  double total_tax = 6;
+  double total_discount = 7;
+}
+
+message StatementResponse {
+  StatementSummary summary = 1;
+  repeated StatementEntry entries = 2;
+}
+
+message AnalyticsDataPoint {
+  string date = 1;
+  string item_name = 2;
+  int32 quantity = 3;
+  double amount = 4;
+  double unit_price = 5;
+}
+
+message AnalyticsRequest {
+  string tenant_id = 1;
+  string start_date = 2;
+  string end_date = 3;
+}
+
+message AnalyticsResponse {
+  repeated AnalyticsDataPoint data_points = 1;
+}

@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/accounting-microservices/proto/auth/v1;authv1";
+
+// AuthService handles tenant registration, authentication, JWT tokens, and user profile management.
+service AuthService {
+  // Register provisions a new tenant account with Argon2id password hashing.
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Login validates credentials and issues a signed JWT token.
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // ValidateToken verifies a JWT token and returns tenant identity claims.
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  // GetUserProfile returns account metadata for the authenticated user.
+  rpc GetUserProfile(GetUserProfileRequest) returns (UserProfile);
+}
+
+message RegisterRequest {
+  string name = 1;
+  string username = 2;
+  string email = 3;
+  string password = 4;
+  string gstin = 5;
+  string pan = 6;
+  string aadhaar = 7;
+  string phone = 8;
+  string address = 9;
+}
+
+message RegisterResponse {
+  string user_id = 1;
+  string username = 2;
+  string token = 3;
+  string message = 4;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string user_id = 1;
+  string username = 2;
+  string token = 3;
+  string message = 4;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string username = 3;
+  string error_message = 4;
+}
+
+message GetUserProfileRequest {
+  string user_id = 1;
+  string username = 2;
+}
+
+message UserProfile {
+  string user_id = 1;
+  string name = 2;
+  string username = 3;
+  string email = 4;
+  string gstin = 5;
+  string pan = 6;
+  string aadhaar = 7;
+  string phone = 8;
+  string address = 9;
+  string created_at = 10;
+}
