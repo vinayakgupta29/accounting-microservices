@@ -14,8 +14,8 @@ Engineered with **Rust**, **Go**, **gRPC (HTTP/2 + Protocol Buffers v3)** for in
 
 ## Authors & Maintainers
 
+- **Vinayak Gupta** ([@vinayakgupta29](https://github.com/vinayakgupta29))
 - **Antigravity** (Google DeepMind Advanced Agentic Coding)
-- **Vinayak Gupta** ([@Vinayakguta29](https://github.com/vinayakguta29))
 
 ---
 
