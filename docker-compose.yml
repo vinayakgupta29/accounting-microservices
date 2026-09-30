@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: accounting-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployments/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    container_name: accounting-auth-service
+    restart: always
+    ports:
+      - "50051:50051"
+    environment:
+      AUTH_PORT: "50051"
+      AUTH_DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/auth_db?sslmode=disable"
+      JWT_SECRET: "accounting-microservices-super-secret-jwt-key"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  customer-service:
+    build:
+      context: .
+      dockerfile: services/customer/Dockerfile
+    container_name: accounting-customer-service
+    restart: always
+    ports:
+      - "50052:50052"
+    environment:
+      CUSTOMER_PORT: "50052"
+      CUSTOMER_DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/customer_db?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: services/inventory/Dockerfile
+    container_name: accounting-inventory-service
+    restart: always
+    ports:
+      - "50053:50053"
+    environment:
+      INVENTORY_PORT: "50053"
+      INVENTORY_DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/inventory_db?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  invoicing-service:
+    build:
+      context: .
+      dockerfile: services/invoicing/Dockerfile
+    container_name: accounting-invoicing-service
+    restart: always
+    ports:
+      - "50054:50054"
+    environment:
+      INVOICING_PORT: "50054"
+      CUSTOMER_SERVICE_URL: "http://customer-service:50052"
+      INVENTORY_SERVICE_URL: "http://inventory-service:50053"
+    depends_on:
+      - customer-service
+      - inventory-service
+
+  statement-service:
+    build:
+      context: .
+      dockerfile: services/statement/Dockerfile
+    container_name: accounting-statement-service
+    restart: always
+    ports:
+      - "50055:50055"
+    environment:
+      STATEMENT_PORT: "50055"
+      INVOICE_SERVICE_URL: "invoicing-service:50054"
+    depends_on:
+      - invoicing-service
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: accounting-api-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      AUTH_SERVICE_ADDR: "auth-service:50051"
+      CUSTOMER_SERVICE_ADDR: "customer-service:50052"
+      INVENTORY_SERVICE_ADDR: "inventory-service:50053"
+      INVOICE_SERVICE_ADDR: "invoicing-service:50054"
+      STATEMENT_SERVICE_ADDR: "statement-service:50055"
+    depends_on:
+      - auth-service
+      - customer-service
+      - inventory-service
+      - invoicing-service
+      - statement-service
+
+volumes:
+  postgres_data:
